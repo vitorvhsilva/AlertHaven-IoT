@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "author": "AlertHaven-Wokwi",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-wifi",
+      "id": "wifi",
+      "top": -100,
+      "left": 200,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht",
+      "top": 100,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-rain-sensor",
+      "id": "rain",
+      "top": 200,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-mpu6050",
+      "id": "mpu",
+      "top": 300,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-anemometer",
+      "id": "anem",
+      "top": 400,
+      "left": 0,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    ["esp:TX0", "$serialMonitor:RX", "", []],
+    ["esp:RX0", "$serialMonitor:TX", "", []],
+    ["dht:VCC", "esp:3V3", "red", []],
+    ["dht:GND", "esp:GND", "black", []],
+    ["dht:OUT", "esp:D4", "green", []],
+    ["rain:VCC", "esp:3V3", "red", []],
+    ["rain:GND", "esp:GND", "black", []],
+    ["rain:OUT", "esp:D5", "blue", []],
+    ["mpu:VCC", "esp:3V3", "red", []],
+    ["mpu:GND", "esp:GND", "black", []],
+    ["mpu:SCL", "esp:D22", "yellow", []],
+    ["mpu:SDA", "esp:D21", "green", []],
+    ["anem:VCC", "esp:3V3", "red", []],
+    ["anem:GND", "esp:GND", "black", []],
+    ["anem:OUT", "esp:D15", "purple", []]
+  ]
+}
