@@ -21,17 +21,25 @@ const unsigned long THINGSPEAK_CHANNEL_ID = 2969337;
 const char* THINGSPEAK_API_KEY = "T7ACXEHAAT3BNS7B";
 
 // ================= SENSORES =====================
-const int PIN_SENSOR_CHUVA = 34;     // GPIO34 (ADC1_CH6) - Pino ADC válido
-const int PIN_ANEMOMETRO = 15;       // GPIO15 (Entrada digital)
-const int PUBLISH_INTERVAL = 20000;  // Intervalo de publicação em ms
+const int PIN_SENSOR_CHUVA = 34;     
+const int PIN_ANEMOMETRO = 15;       
+const int PUBLISH_INTERVAL = 20000;  
 
 const int ID_IOT = 3232321;
 
 Adafruit_MPU6050 mpu;
 
 // ================= VARIÁVEIS ====================
+const char* latitude = "latitudeTeste";
+const char* longitude = "latitudeTeste";
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
+
+static int chuva_simulada;
+static float vento_simulado;
+static float temperatura_simulada;
+static float aceleracaoX_simulada;
+static float aceleracaoY_simulada;
 
 enum Evento { 
   ALAGAMENTO = 1,    // Valores numéricos para ThingSpeak
@@ -198,6 +206,12 @@ Evento detectarEvento() {
   Serial.println("Aceleração X: " + String(aceleracaoX) + " m/s²");
   Serial.println("Aceleração Y: " + String(aceleracaoY) + " m/s²");
 
+  chuva_simulada = chuva;
+  vento_simulado = vento;
+  temperatura_simulada = temperatura;
+  aceleracaoX_simulada = aceleracaoX;
+  aceleracaoY_simulada = aceleracaoY;
+
   // Lógica de detecção de eventos
   if (chuva > 3000 && vento > 500) {
     Serial.println(">>> Detecção: TEMPESTADE <<<");
@@ -225,11 +239,29 @@ Evento detectarEvento() {
 }
 
 void enviarDados(Evento evento) {
-  // Enviar para MQTT
+  int chuva = analogRead(PIN_SENSOR_CHUVA);
+  float vento = 0;
+  if (rotationCount > 0) {
+    unsigned long elapsed = millis() - lastRotationTime;
+    vento = (rotationCount / 2.0) * (60000.0 / elapsed); // RPM
+    rotationCount = 0;
+  }
+  
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  float temperatura = temp.temperature;
+  float aceleracaoX = a.acceleration.x;
+  float aceleracaoY = a.acceleration.y;
+
   JsonDocument doc;
   doc["device"] = ID_IOT;
   doc["evento"] = static_cast<int>(evento);
   doc["timestamp"] = millis();
+  doc["chuva"] = chuva_simulada;
+  doc["vento"] = vento_simulado;
+  doc["temperatura"] = temperatura_simulada;
+  doc["aceleracaoX"] = aceleracaoX_simulada;
+  doc["aceleracaoY"] = aceleracaoY_simulada;
   
   char payload[256];
   serializeJson(doc, payload);
@@ -240,10 +272,13 @@ void enviarDados(Evento evento) {
     Serial.println("Falha no envio MQTT!");
   }
 
-  // Enviar para ThingSpeak
   ThingSpeak.setField(1, ID_IOT);
   ThingSpeak.setField(2, static_cast<float>(evento));
-  ThingSpeak.setField(3, analogRead(PIN_SENSOR_CHUVA));
+  ThingSpeak.setField(3, chuva_simulada);
+  ThingSpeak.setField(4, vento_simulado);
+  ThingSpeak.setField(5, temperatura_simulada);
+  ThingSpeak.setField(6, aceleracaoX_simulada);
+  ThingSpeak.setField(7, aceleracaoY_simulada);
   
   int status = ThingSpeak.writeFields(THINGSPEAK_CHANNEL_ID, THINGSPEAK_API_KEY);
   if (status == 200) {
@@ -297,7 +332,7 @@ void setup() {
 void loop() {
   maintainConnections();
   mqttClient.loop();
-  delay(10000);
+  delay(20000);
 
   static unsigned long lastCheck = 0;
   
