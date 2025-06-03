@@ -57,6 +57,45 @@ A simulação percorre 6 fases alternando entre condições normais e eventos cl
 | **MQTT Broker**      | broker.hivemq.com            | Plataforma para publicar e assinar mensagens de eventos  |
 | **ThingSpeak**       | Canal `2969337`              | Armazenamento e visualização de dados dos sensores       |
 
+## Diagrama de Arquitetura do Sistema
+
+```mermaid
+flowchart TB
+    subgraph Hardware
+        A[ESP32] --> B[MPU6050 - Acelerômetro/Giroscópio]
+        A --> C[Anemômetro - Sensor de Vento]
+        A --> D[Sensor de Chuva - Analógico]
+        A --> E[DHT22 - Temperatura/Umidade]
+    end
+
+    subgraph Software
+        A --> F[WiFi Connection]
+        F --> G[MQTT Broker - broker.hivemq.com]
+        F --> H[ThingSpeak Cloud]
+    end
+
+    subgraph Lógica
+        I[Leitura de Sensores] --> J[Detecção de Eventos]
+        J -->|Evento Detectado| K[Envio MQTT]
+        J -->|Dados Contínuos| L[Envio ThingSpeak]
+    end
+
+    subgraph Saídas
+        K --> M["📱 API .NET - (Subscriber MQTT)"]
+        L --> N["📊 Dashboard ThingSpeak - (Gráficos/Tendências)"]
+    end
+
+    style A fill:#4CAF50,stroke:#388E3C
+    style B fill:#2196F3,stroke:#1565C0
+    style C fill:#2196F3,stroke:#1565C0
+    style D fill:#2196F3,stroke:#1565C0
+    style E fill:#2196F3,stroke:#1565C0
+    style G fill:#9C27B0,stroke:#7B1FA2
+    style H fill:#FF9800,stroke:#F57C00
+    style M fill:#607D8B,stroke:#455A64
+    style N fill:#607D8B,stroke:#455A64
+```
+
 
 
 ## Instalação
